@@ -90,7 +90,7 @@ chunk_size = 512
 # huggingface 的chat api设置
 # huggingchat
 email = 'wuzhenglingame@gmail.com'
-passwd = 'qazedctgb13579QAZ'
+passwd = ''
 # huggingface 的chat api设置结束
 #######################################################################
 
