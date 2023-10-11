@@ -60,10 +60,6 @@ default_socket = None
 # claude api key official
 claude_api_key = ''
 
-# claude2 非官方api接口，使用Web的sessionKey发送请求、接受响应
-# 详情访问https://github.com/AshwinPathi/claude-api-py
-claude_api_sessionKey =\
-    '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'
 # claude api 设置结束
 ########################################################
 

@@ -2,6 +2,7 @@ import json
 import asyncio
 import websockets
 
+import global_var
 
 connections = {}
 
@@ -27,5 +28,11 @@ async def handler(websocket):
 
 
 async def switcher_server():
-    async with websockets.serve(handler, '127.0.0.1', 9999, max_size=10 * 1024 * 1024, ping_timeout=60 * 3):
+
+    async with websockets.serve(handler,
+                                global_var.ip,
+                                global_var.port,
+                                max_size=10 * 1024 * 1024,
+                                ping_timeout=60 * 3):
+        print('Server启动')
         await asyncio.Future()

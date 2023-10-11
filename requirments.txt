@@ -6,7 +6,6 @@ faiss
 langchain
 websockets
 anthropic
-claude-api-py
 unofficial-claude2-api
 hugchat
 diffusers
