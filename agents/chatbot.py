@@ -15,6 +15,8 @@ from typing import Dict
 from typing import Any
 from typing import Optional
 
+import global_var
+
 from utils import socket_no_proxy
 
 
@@ -95,8 +97,29 @@ class ChatBotChain(Chain):
 
 async def audios_to_text(audio_list: list):
     # 处理音频
-    with socket_no_proxy():
-        async with websockets.connect('ws://127.0.0.1:9999/', max_size=10 * 1024 * 1024) as websocket:
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
+                                          max_size=10 * 1024 * 1024) as websocket:
+                text_list_from_audios = []
+                for audio in audio_list:
+                    audio = audio.read()
+                    encoded_audio = base64.b64encode(audio).decode()
+                    message = {
+                        'from': 'CLIENT.STT',
+                        'to': 'STT',
+                        'content': encoded_audio
+                    }
+                    message = json.dumps(message)
+                    await websocket.send(message)
+
+                    recv = await websocket.recv()
+                    recv = json.loads(recv)
+
+                    text_list_from_audios.append(recv['content'])
+    else:
+        async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
+                                      max_size=10 * 1024 * 1024) as websocket:
             text_list_from_audios = []
             for audio in audio_list:
                 audio = audio.read()
@@ -118,8 +141,29 @@ async def audios_to_text(audio_list: list):
 
 async def images_to_text(images_list: list):
     # 处理图片
-    with socket_no_proxy():
-        async with websockets.connect('ws://127.0.0.1:9999/', max_size=10 * 1024 * 1024) as websocket:
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
+                                          max_size=10 * 1024 * 1024) as websocket:
+                text_list_from_images = []
+                for image in images_list:
+                    image = image.read()
+                    encoded_image = base64.b64encode(image).decode()
+                    message = {
+                        'from': 'CLIENT.ITT',
+                        'to': 'ITT',
+                        'content': encoded_image
+                    }
+                    message = json.dumps(message)
+                    await websocket.send(message)
+
+                    recv = await websocket.recv()
+                    recv = json.loads(recv)
+
+                    [text_list_from_images.append(i) for i in recv['content']]
+    else:
+        async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
+                                      max_size=10 * 1024 * 1024) as websocket:
             text_list_from_images = []
             for image in images_list:
                 image = image.read()
@@ -136,14 +180,29 @@ async def images_to_text(images_list: list):
                 recv = json.loads(recv)
 
                 [text_list_from_images.append(i) for i in recv['content']]
-
     return text_list_from_images
 
 
 async def text_to_audio(text: str):
     # 处理图片
-    with socket_no_proxy():
-        async with websockets.connect('ws://127.0.0.1:9999/', max_size=10 * 1024 * 1024) as websocket:
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
+                                          max_size=10 * 1024 * 1024) as websocket:
+                message = {
+                    'from': 'CLIENT.TTS',
+                    'to': 'TTS',
+                    'content': text
+                }
+                message = json.dumps(message)
+                await websocket.send(message)
+
+                recv = await websocket.recv()
+                recv = json.loads(recv)
+                recv['content']['speech_value'] = base64.b64decode(recv['content']['speech_value'].encode())
+    else:
+        async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
+                                      max_size=10 * 1024 * 1024) as websocket:
             message = {
                 'from': 'CLIENT.TTS',
                 'to': 'TTS',
@@ -160,8 +219,24 @@ async def text_to_audio(text: str):
 
 async def text_to_image(text: str):
     # 处理图片
-    with socket_no_proxy():
-        async with websockets.connect('ws://127.0.0.1:9999/', max_size=10 * 1024 * 1024) as websocket:
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
+                                          max_size=10 * 1024 * 1024) as websocket:
+                message = {
+                    'from': 'CLIENT.TTI',
+                    'to': 'TTI',
+                    'content': text
+                }
+                message = json.dumps(message)
+                await websocket.send(message)
+
+                recv = await websocket.recv()
+                recv = json.loads(recv)
+                recv['content'] = base64.b64decode(recv['content'].encode())
+    else:
+        async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
+                                      max_size=10 * 1024 * 1024) as websocket:
             message = {
                 'from': 'CLIENT.TTI',
                 'to': 'TTI',
@@ -178,8 +253,24 @@ async def text_to_image(text: str):
 
 async def text_to_video(text: str):
     # 处理图片
-    with socket_no_proxy():
-        async with websockets.connect('ws://127.0.0.1:9999/', max_size=10 * 1024 * 1024) as websocket:
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
+                                          max_size=10 * 1024 * 1024) as websocket:
+                message = {
+                    'from': 'CLIENT.TTV',
+                    'to': 'TTV',
+                    'content': text
+                }
+                message = json.dumps(message)
+                await websocket.send(message)
+
+                recv = await websocket.recv()
+                recv = json.loads(recv)
+                recv['content'] = base64.b64decode(recv['content'].encode())
+    else:
+        async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
+                                      max_size=10 * 1024 * 1024) as websocket:
             message = {
                 'from': 'CLIENT.TTV',
                 'to': 'TTV',
@@ -196,8 +287,28 @@ async def text_to_video(text: str):
 
 async def image_to_image(prompt: str, image: bytes):
     # 处理图片
-    with socket_no_proxy():
-        async with websockets.connect('ws://127.0.0.1:9999/', max_size=10 * 1024 * 1024) as websocket:
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
+                                          max_size=10 * 1024 * 1024) as websocket:
+                image = base64.b64encode(image).decode()
+                message = {
+                    'from': 'CLIENT.TTV',
+                    'to': 'TTV',
+                    'content': {
+                        'prompt': prompt,
+                        'image': image
+                    }
+                }
+                message = json.dumps(message)
+                await websocket.send(message)
+
+                recv = await websocket.recv()
+                recv = json.loads(recv)
+                recv['content'] = base64.b64decode(recv['content'].encode())
+    else:
+        async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
+                                      max_size=10 * 1024 * 1024) as websocket:
             image = base64.b64encode(image).decode()
             message = {
                 'from': 'CLIENT.TTV',
