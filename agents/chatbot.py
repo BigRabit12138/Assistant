@@ -61,7 +61,6 @@ class ChatBotChain(Chain):
                                             callbacks=run_manager.get_child() if run_manager else None
                                             )
 
-
         if run_manager:
             run_manager.on_text(response.generations[0][0].text)
         return {self.output_key: response.generations[0][0].text}

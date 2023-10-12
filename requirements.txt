@@ -2,7 +2,6 @@ torch
 loguru
 streamlit
 pydantic
-faiss
 langchain
 websockets
 anthropic
@@ -10,8 +9,8 @@ unofficial-claude2-api
 hugchat
 diffusers
 salesforce-lavis
-fastsam
 Pillow
 opencv-python
 faster_whisper
 transformers
+clip

@@ -5,13 +5,17 @@ import websockets
 import streamlit as st
 
 from PIL import Image
+from langchain.callbacks.stdout import StdOutCallbackHandler
+
 from agents import ChatBotChain
+from agents.prompts import CHATBOT_PROMPT
+from llm import HuggingChatForLangchain
 
 
 async def main():
     st.set_page_config(layout='wide')
     col1, col2, col3 = st.columns([0.2, 0.3, 0.5])
-    if st.session_state['messages'] is None:
+    if st.session_state.get('messages') is None:
         st.session_state['messages'] = []
 
     with col1:
@@ -32,8 +36,9 @@ async def main():
 
         if submit:
 
-            chat = ChatBotChain()
-            # chat.run()
+            chat = ChatBotChain(prompt=CHATBOT_PROMPT, llm=HuggingChatForLangchain())
+            chat.run({'text': text, 'audios_list': audios_list, 'images_list': images_list},
+                     callbacks=[StdOutCallbackHandler()])
 
     with col2:
         st.title('输出')
