@@ -46,19 +46,15 @@ class ChatBotChain(Chain):
         inputs: Dict[str, Any],
         run_manager: Optional[CallbackManagerForChainRun] = None,
     ) -> Dict[str, Any]:
-        input_transformed = copy.deepcopy(inputs)
-        del(input_transformed['audios_list'])
-        del (input_transformed['images_list'])
-
         loop = asyncio.get_event_loop()
         tasks = asyncio.gather(audios_to_text(inputs['audios_list']),
                                images_to_text(inputs['images_list'])
                                )
         text_list_from_audios, text_list_from_images = loop.run_until_complete(tasks)
-        input_transformed['text_list_from_images'] = text_list_from_images
-        input_transformed['text_list_from_audios'] = text_list_from_audios
+        inputs['text_list_from_images'] = text_list_from_images
+        inputs['text_list_from_audios'] = text_list_from_audios
 
-        prompt_value = self.prompt.format_prompt(**input_transformed)
+        prompt_value = self.prompt.format_prompt(**inputs)
         response = self.llm.generate_prompt(prompts=[prompt_value],
                                             callbacks=run_manager.get_child() if run_manager else None
                                             )
@@ -72,18 +68,15 @@ class ChatBotChain(Chain):
         inputs: Dict[str, Any],
         run_manager: Optional[AsyncCallbackManagerForChainRun] = None,
     ) -> Dict[str, Any]:
-        input_transformed = copy.deepcopy(inputs)
-        del (input_transformed['audios_list'])
-        del (input_transformed['images_list'])
 
         text_list_from_images, text_list_from_audios = await asyncio.gather(
             audios_to_text(inputs['audios_list']),
             images_to_text(inputs['images_list'])
         )
-        input_transformed['text_list_from_images'] = text_list_from_images
-        input_transformed['text_list_from_audios'] = text_list_from_audios
+        inputs['text_list_from_images'] = text_list_from_images
+        inputs['text_list_from_audios'] = text_list_from_audios
 
-        prompt_value = self.prompt.format_prompt(**input_transformed)
+        prompt_value = self.prompt.format_prompt(**inputs)
         response = self.llm.generate_prompt(prompts=[prompt_value],
                                             callbacks=run_manager.get_child() if run_manager else None
                                             )
@@ -160,7 +153,8 @@ async def images_to_text(images_list: list):
                     recv = await websocket.recv()
                     recv = json.loads(recv)
 
-                    [text_list_from_images.append(i) for i in recv['content']]
+                    for i in recv['content']:
+                        text_list_from_images.append(i)
     else:
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
@@ -179,7 +173,8 @@ async def images_to_text(images_list: list):
                 recv = await websocket.recv()
                 recv = json.loads(recv)
 
-                [text_list_from_images.append(i) for i in recv['content']]
+                for i in recv['content']:
+                    text_list_from_images.append(i)
     return text_list_from_images
 
 

@@ -24,8 +24,8 @@ chat_chain = ChatBotChain(
     prompt=PromptTemplate.from_template(CHATBOT_PROMPT),
     llm=HuggingChatForLangchain()
 )
-audios_list = [open('/resource/audio.wav', 'rb')]
-images_list = [open('/resource/photo.png', 'rb')]
+audios_list = [open('./resource/audio.wav', 'rb')]
+images_list = [open('./resource/photo.png', 'rb')]
 gg = chat_chain.run({'audios_list': audios_list,
                      'images_list': images_list,
                      'text': '你看见的图片是啥子内容？',

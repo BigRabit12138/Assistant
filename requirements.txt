@@ -14,3 +14,4 @@ opencv-python
 faster_whisper
 transformers
 clip
+socks
