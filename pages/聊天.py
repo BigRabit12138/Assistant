@@ -6,6 +6,7 @@ import streamlit as st
 
 from PIL import Image
 from langchain.callbacks.stdout import StdOutCallbackHandler
+from langchain.prompts.prompt import PromptTemplate
 
 from agents import ChatBotChain
 from agents.prompts import CHATBOT_PROMPT
@@ -35,10 +36,11 @@ async def main():
                            use_container_width=True)
 
         if submit:
-
-            chat = ChatBotChain(prompt=CHATBOT_PROMPT, llm=HuggingChatForLangchain())
-            chat.run({'text': text, 'audios_list': audios_list, 'images_list': images_list},
-                     callbacks=[StdOutCallbackHandler()])
+            print('GG哈哈哈')
+            chat = ChatBotChain(prompt=PromptTemplate.from_template(CHATBOT_PROMPT), llm=HuggingChatForLangchain())
+            await chat.arun({'text': text, 'audios_list': audios_list, 'images_list': images_list,
+                             'text_list_from_audios': '', 'text_list_from_images': ''},
+                            callbacks=[StdOutCallbackHandler()])
 
     with col2:
         st.title('输出')
