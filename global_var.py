@@ -31,8 +31,8 @@ data_path = project_dir / 'data'
 # logger
 logger_path = project_dir / 'logs/log.txt'
 logger.remove()
-logger.add(sys.stderr, level="INFO")
-logger.add(logger_path, level="DEBUG")
+logger.add(sys.stdout, level="INFO")
+logger.add(logger_path, level="INFO")
 # 日志对象设置结束
 ################################################################
 

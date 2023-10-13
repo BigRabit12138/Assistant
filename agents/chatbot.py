@@ -1,5 +1,4 @@
 import json
-import copy
 import base64
 import asyncio
 import websockets
@@ -47,13 +46,12 @@ class ChatBotChain(Chain):
         run_manager: Optional[CallbackManagerForChainRun] = None,
     ) -> Dict[str, Any]:
         loop = asyncio.get_event_loop()
-        tasks = asyncio.gather(audios_to_text(inputs['audios_list']),
-                               images_to_text(inputs['images_list'])
+        tasks = asyncio.gather(audios_to_text(inputs['audios']),
+                               images_to_text(inputs['images'])
                                )
-        text_list_from_audios, text_list_from_images = loop.run_until_complete(tasks)
-        inputs['text_list_from_images'] = text_list_from_images
-        inputs['text_list_from_audios'] = text_list_from_audios
-
+        audios, images = loop.run_until_complete(tasks)
+        inputs['images'] = images
+        inputs['audios'] = audios
         prompt_value = self.prompt.format_prompt(**inputs)
         response = self.llm.generate_prompt(prompts=[prompt_value],
                                             callbacks=run_manager.get_child() if run_manager else None
@@ -69,51 +67,34 @@ class ChatBotChain(Chain):
         run_manager: Optional[AsyncCallbackManagerForChainRun] = None,
     ) -> Dict[str, Any]:
 
-        text_list_from_images, text_list_from_audios = await asyncio.gather(
-            audios_to_text(inputs['audios_list']),
-            images_to_text(inputs['images_list'])
+        images, audios = await asyncio.gather(
+            audios_to_text(inputs['audios']),
+            images_to_text(inputs['images'])
         )
-        inputs['text_list_from_images'] = text_list_from_images
-        inputs['text_list_from_audios'] = text_list_from_audios
+        inputs['images'] = images
+        inputs['audios'] = audios
 
         prompt_value = self.prompt.format_prompt(**inputs)
         response = self.llm.generate_prompt(prompts=[prompt_value],
                                             callbacks=run_manager.get_child() if run_manager else None
                                             )
 
-        response = json.loads(response.generations[0][0].text)
-
         if run_manager:
             await run_manager.on_text(response.generations[0][0].text)
         return {self.output_key: response.generations[0][0].text}
 
 
+class ServerException(Exception):
+    pass
+
+
 async def audios_to_text(audio_list: list):
     # 处理音频
-    if global_var.run_local_mode:
-        with socket_no_proxy():
-            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
-                                          max_size=10 * 1024 * 1024) as websocket:
-                text_list_from_audios = []
-                for audio in audio_list:
-                    audio = audio.read()
-                    encoded_audio = base64.b64encode(audio).decode()
-                    message = {
-                        'from': 'CLIENT.STT',
-                        'to': 'STT',
-                        'content': encoded_audio
-                    }
-                    message = json.dumps(message)
-                    await websocket.send(message)
+    text_list_from_audios = []
 
-                    recv = await websocket.recv()
-                    recv = json.loads(recv)
-
-                    text_list_from_audios.append(recv['content'])
-    else:
+    async def send_and_recv():
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
-            text_list_from_audios = []
             for audio in audio_list:
                 audio = audio.read()
                 encoded_audio = base64.b64encode(audio).decode()
@@ -127,38 +108,30 @@ async def audios_to_text(audio_list: list):
 
                 recv = await websocket.recv()
                 recv = json.loads(recv)
+                if recv.get('status') == 404:
+                    print(recv)
+                    global_var.logger.error(f'服务器后端出错：\n{recv}')
 
-                text_list_from_audios.append(recv['content'])
+                    raise ServerException()
+                else:
+                    text_list_from_audios.append(recv['content'])
+
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            await send_and_recv()
+    else:
+        await send_and_recv()
+
     return text_list_from_audios
 
 
 async def images_to_text(images_list: list):
     # 处理图片
-    if global_var.run_local_mode:
-        with socket_no_proxy():
-            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
-                                          max_size=10 * 1024 * 1024) as websocket:
-                text_list_from_images = []
-                for image in images_list:
-                    image = image.read()
-                    encoded_image = base64.b64encode(image).decode()
-                    message = {
-                        'from': 'CLIENT.ITT',
-                        'to': 'ITT',
-                        'content': encoded_image
-                    }
-                    message = json.dumps(message)
-                    await websocket.send(message)
+    text_list_from_images = []
 
-                    recv = await websocket.recv()
-                    recv = json.loads(recv)
-
-                    for i in recv['content']:
-                        text_list_from_images.append(i)
-    else:
+    async def send_and_recv():
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
-            text_list_from_images = []
             for image in images_list:
                 image = image.read()
                 encoded_image = base64.b64encode(image).decode()
@@ -172,30 +145,28 @@ async def images_to_text(images_list: list):
 
                 recv = await websocket.recv()
                 recv = json.loads(recv)
+                if recv.get('status') == 404:
+                    print(recv)
+                    global_var.logger.error(f'服务器后端出错：\n{recv}')
 
-                for i in recv['content']:
-                    text_list_from_images.append(i)
+                    raise ServerException()
+                else:
+                    for i in recv['content']:
+                        text_list_from_images.append(i)
+
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            await send_and_recv()
+    else:
+        await send_and_recv()
     return text_list_from_images
 
 
 async def text_to_audio(text: str):
     # 处理图片
-    if global_var.run_local_mode:
-        with socket_no_proxy():
-            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
-                                          max_size=10 * 1024 * 1024) as websocket:
-                message = {
-                    'from': 'CLIENT.TTS',
-                    'to': 'TTS',
-                    'content': text
-                }
-                message = json.dumps(message)
-                await websocket.send(message)
+    recv_list = []
 
-                recv = await websocket.recv()
-                recv = json.loads(recv)
-                recv['content']['speech_value'] = base64.b64decode(recv['content']['speech_value'].encode())
-    else:
+    async def send_and_recv():
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
             message = {
@@ -208,28 +179,28 @@ async def text_to_audio(text: str):
 
             recv = await websocket.recv()
             recv = json.loads(recv)
-            recv['content']['speech_value'] = base64.b64decode(recv['content']['speech_value'].encode())
-    return recv['content']['speech_value'], recv['content']['sampling_rate']
+            if recv.get('status') == 404:
+                print(recv)
+                global_var.logger.error(f'服务器后端出错：\n{recv}')
+
+                raise ServerException()
+            else:
+                recv['content']['speech_value'] = base64.b64decode(recv['content']['speech_value'].encode())
+                recv_list.append(recv)
+
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            await send_and_recv()
+    else:
+        await send_and_recv()
+    return recv_list[0]['content']['speech_value'], recv_list[0]['content']['sampling_rate']
 
 
 async def text_to_image(text: str):
     # 处理图片
-    if global_var.run_local_mode:
-        with socket_no_proxy():
-            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
-                                          max_size=10 * 1024 * 1024) as websocket:
-                message = {
-                    'from': 'CLIENT.TTI',
-                    'to': 'TTI',
-                    'content': text
-                }
-                message = json.dumps(message)
-                await websocket.send(message)
+    recv_list = []
 
-                recv = await websocket.recv()
-                recv = json.loads(recv)
-                recv['content'] = base64.b64decode(recv['content'].encode())
-    else:
+    async def send_and_recv():
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
             message = {
@@ -242,28 +213,28 @@ async def text_to_image(text: str):
 
             recv = await websocket.recv()
             recv = json.loads(recv)
-            recv['content'] = base64.b64decode(recv['content'].encode())
-    return recv['content']
+            if recv.get('status') == 404:
+                print(recv)
+                global_var.logger.error(f'服务器后端出错：\n{recv}')
+
+                raise ServerException()
+            else:
+                recv['content'] = base64.b64decode(recv['content'].encode())
+                recv_list.append(recv)
+
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            await send_and_recv()
+    else:
+        await send_and_recv()
+    return recv_list[0]['content']
 
 
 async def text_to_video(text: str):
     # 处理图片
-    if global_var.run_local_mode:
-        with socket_no_proxy():
-            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
-                                          max_size=10 * 1024 * 1024) as websocket:
-                message = {
-                    'from': 'CLIENT.TTV',
-                    'to': 'TTV',
-                    'content': text
-                }
-                message = json.dumps(message)
-                await websocket.send(message)
+    recv_list = []
 
-                recv = await websocket.recv()
-                recv = json.loads(recv)
-                recv['content'] = base64.b64decode(recv['content'].encode())
-    else:
+    async def send_and_recv():
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
             message = {
@@ -276,41 +247,37 @@ async def text_to_video(text: str):
 
             recv = await websocket.recv()
             recv = json.loads(recv)
-            recv['content'] = base64.b64decode(recv['content'].encode())
-    return recv['content']
+            if recv.get('status') == 404:
+                print(recv)
+                global_var.logger.error(f'服务器后端出错：\n{recv}')
+
+                raise ServerException()
+            else:
+                recv['content'] = base64.b64decode(recv['content'].encode())
+                recv_list.append(recv)
+
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            await send_and_recv()
+    else:
+        await send_and_recv()
+    return recv_list[0]['content']
 
 
 async def image_to_image(prompt: str, image: bytes):
     # 处理图片
-    if global_var.run_local_mode:
-        with socket_no_proxy():
-            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
-                                          max_size=10 * 1024 * 1024) as websocket:
-                image = base64.b64encode(image).decode()
-                message = {
-                    'from': 'CLIENT.TTV',
-                    'to': 'TTV',
-                    'content': {
-                        'prompt': prompt,
-                        'image': image
-                    }
-                }
-                message = json.dumps(message)
-                await websocket.send(message)
+    recv_list = []
 
-                recv = await websocket.recv()
-                recv = json.loads(recv)
-                recv['content'] = base64.b64decode(recv['content'].encode())
-    else:
+    async def send_and_recv():
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
-            image = base64.b64encode(image).decode()
+            image_ = base64.b64encode(image).decode()
             message = {
-                'from': 'CLIENT.TTV',
-                'to': 'TTV',
+                'from': 'CLIENT.ITI',
+                'to': 'ITI',
                 'content': {
                     'prompt': prompt,
-                    'image': image
+                    'image': image_
                 }
             }
             message = json.dumps(message)
@@ -318,5 +285,18 @@ async def image_to_image(prompt: str, image: bytes):
 
             recv = await websocket.recv()
             recv = json.loads(recv)
-            recv['content'] = base64.b64decode(recv['content'].encode())
-    return recv['content']
+            if recv.get('status') == 404:
+                print(recv)
+                global_var.logger.error(f'服务器后端出错：\n{recv}')
+
+                raise ServerException()
+            else:
+                recv['content'] = base64.b64decode(recv['content'].encode())
+                recv_list.append(recv)
+
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            await send_and_recv()
+    else:
+        await send_and_recv()
+    return recv_list[0]['content']

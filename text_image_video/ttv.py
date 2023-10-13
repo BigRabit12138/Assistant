@@ -38,43 +38,9 @@ class TTV:
 
 async def ttv_client(ttv):
     global IS_INITIALIZED
-    if global_var.run_local_mode:
-        with socket_no_proxy():
-            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
-                                          max_size=10 * 1024 * 1024) as websocket:
-                while True:
-                    if not IS_INITIALIZED:
-                        message = {
-                            'from': 'TTV',
-                            'to': 'SERVER',
-                            'content': 'hello'
-                        }
 
-                        message = json.dumps(message)
-                        await websocket.send(message)
-
-                        response = await websocket.recv()
-                        response = json.loads(response)
-
-                        if response['content'] == 'ok':
-                            IS_INITIALIZED = True
-                    else:
-                        recv = await websocket.recv()
-                        recv = json.loads(recv)
-
-                        video_frame = ttv.text2video(recv['content'])
-
-                        video_frame = base64.b64encode(video_frame).decode()
-
-                        message = {
-                            'from': 'ITI',
-                            'to': 'CLIENT',
-                            'content': video_frame
-                        }
-
-                        message = json.dumps(message)
-                        await websocket.send(message)
-    else:
+    async def send_and_recv():
+        global IS_INITIALIZED
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
             while True:
@@ -102,10 +68,16 @@ async def ttv_client(ttv):
                     video_frame = base64.b64encode(video_frame).decode()
 
                     message = {
-                        'from': 'ITI',
-                        'to': 'CLIENT',
+                        'from': 'TTV',
+                        'to': 'CLIENT.TTV',
                         'content': video_frame
                     }
 
                     message = json.dumps(message)
                     await websocket.send(message)
+
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            await send_and_recv()
+    else:
+        await send_and_recv()

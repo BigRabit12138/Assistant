@@ -4,6 +4,7 @@ import websockets
 import os.path
 import base64
 
+from io import BytesIO
 from PIL import Image
 from PIL import ImageOps
 from diffusers import StableDiffusionInstructPix2PixPipeline
@@ -45,7 +46,7 @@ class ITI:
         return image
 
     def image2image(self, image: bytes, prompt: str):
-        image = Image.open(image)
+        image = Image.open(BytesIO(image))
         image = ImageOps.exif_transpose(image)
         image = image.convert('RGB')
         image = self.pipe(
@@ -60,43 +61,9 @@ class ITI:
 
 async def iti_client(iti):
     global IS_INITIALIZED
-    if global_var.run_local_mode:
-        with socket_no_proxy():
-            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
-                                          max_size=10 * 1024 * 1024) as websocket:
-                while True:
-                    if not IS_INITIALIZED:
-                        message = {
-                            'from': 'ITI',
-                            'to': 'SERVER',
-                            'content': 'hello'
-                        }
 
-                        message = json.dumps(message)
-                        await websocket.send(message)
-
-                        response = await websocket.recv()
-                        response = json.loads(response)
-
-                        if response['content'] == 'ok':
-                            IS_INITIALIZED = True
-                    else:
-                        recv = await websocket.recv()
-                        recv = json.loads(recv)
-
-                        image_bytes_base64_decoded = base64.b64decode(recv['content']['image'].encode())
-                        image = iti.image2image(image_bytes_base64_decoded, recv['content']['prompt'])
-
-                        image = base64.b64encode(image).decode()
-                        message = {
-                            'from': 'ITI',
-                            'to': 'CLIENT',
-                            'content': image
-                        }
-
-                        message = json.dumps(message)
-                        await websocket.send(message)
-    else:
+    async def send_and_recv():
+        global IS_INITIALIZED
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
             while True:
@@ -125,10 +92,15 @@ async def iti_client(iti):
                     image = base64.b64encode(image).decode()
                     message = {
                         'from': 'ITI',
-                        'to': 'CLIENT',
+                        'to': 'CLIENT.ITI',
                         'content': image
                     }
 
                     message = json.dumps(message)
                     await websocket.send(message)
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            await send_and_recv()
+    else:
+        await send_and_recv()
 

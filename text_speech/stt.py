@@ -1,10 +1,10 @@
 import os
-import io
 import json
 import torch
 import base64
 import websockets
 
+from io import BytesIO
 from faster_whisper import WhisperModel
 
 import global_var
@@ -20,8 +20,8 @@ class STT:
         self.device = global_var.device if torch.cuda.is_available() else 'cpu'
         self.model = WhisperModel(model_size)
 
-    def transcribe(self, audio_binary_io):
-        segments, info = self.model.transcribe(audio_binary_io)
+    def transcribe(self, audio: bytes):
+        segments, info = self.model.transcribe(BytesIO(audio))
         txt = ''.join([segment.text for segment in segments])
         return txt
 
@@ -40,42 +40,9 @@ class STT:
 
 async def stt_client(stt):
     global IS_INITIALIZED
-    if global_var.run_local_mode:
-        with socket_no_proxy():
-            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
-                                          max_size=10 * 1024 * 1024) as websocket:
-                while True:
-                    if not IS_INITIALIZED:
-                        message = {
-                            'from': 'STT',
-                            'to': 'SERVER',
-                            'content': 'hello'
-                        }
 
-                        message = json.dumps(message)
-                        await websocket.send(message)
-
-                        response = await websocket.recv()
-                        response = json.loads(response)
-
-                        if response['content'] == 'ok':
-                            IS_INITIALIZED = True
-                    else:
-                        recv = await websocket.recv()
-                        recv = json.loads(recv)
-
-                        audio_bytes_base64_decoded = base64.b64decode(recv['content'].encode())
-                        audio_binary_io = io.BytesIO(audio_bytes_base64_decoded)
-                        text = stt.transcribe(audio_binary_io)
-
-                        message = {
-                            'from': 'STT',
-                            'to': 'CLIENT.STT',
-                            'content': text
-                        }
-                        message = json.dumps(message)
-                        await websocket.send(message)
-    else:
+    async def send_and_recv():
+        global IS_INITIALIZED
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
             while True:
@@ -99,8 +66,7 @@ async def stt_client(stt):
                     recv = json.loads(recv)
 
                     audio_bytes_base64_decoded = base64.b64decode(recv['content'].encode())
-                    audio_binary_io = io.BytesIO(audio_bytes_base64_decoded)
-                    text = stt.transcribe(audio_binary_io)
+                    text = stt.transcribe(audio_bytes_base64_decoded)
 
                     message = {
                         'from': 'STT',
@@ -109,3 +75,9 @@ async def stt_client(stt):
                     }
                     message = json.dumps(message)
                     await websocket.send(message)
+
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            await send_and_recv()
+    else:
+        await send_and_recv()

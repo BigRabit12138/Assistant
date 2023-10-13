@@ -38,43 +38,9 @@ class TTS:
 
 async def tts_client(tts):
     global IS_INITIALIZED
-    if global_var.run_local_mode:
-        with socket_no_proxy():
-            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
-                                          max_size=10 * 1024 * 1024) as websocket:
-                while True:
-                    if not IS_INITIALIZED:
-                        message = {
-                            'from': 'TTS',
-                            'to': 'SERVER',
-                            'content': 'hello'
-                        }
-                        message = json.dumps(message)
-                        await websocket.send(message)
 
-                        response = await websocket.recv()
-                        response = json.loads(response)
-
-                        if response['content'] == 'ok':
-                            IS_INITIALIZED = True
-                    else:
-                        recv = await websocket.recv()
-                        recv = json.loads(recv)
-
-                        speech_value, sampling_rate = tts.transcribe(recv['content'])
-                        speech_value = base64.b64encode(speech_value).decode()
-
-                        message = {
-                            'from': 'TTS',
-                            'to': 'CLIENT.TTS',
-                            'content': {
-                                'speech_value': speech_value,
-                                'sampling_rate': sampling_rate,
-                            }
-                        }
-                        message = json.dumps(message)
-                        await websocket.send(message)
-    else:
+    async def send_and_recv():
+        global IS_INITIALIZED
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
             while True:
@@ -109,3 +75,9 @@ async def tts_client(tts):
                     }
                     message = json.dumps(message)
                     await websocket.send(message)
+
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            await send_and_recv()
+    else:
+        await send_and_recv()

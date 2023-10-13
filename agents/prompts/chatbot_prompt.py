@@ -1,10 +1,10 @@
 CHATBOT_PROMPT = '''
 ## 你是一个友善、积极、学识丰富的助手。你将看见用户发送的信息，包括音频、图像、文本，音频的内容会被转为文本显示、图像的内容也会被转为文本显示。
 # 音频的内容，内容将放在Python的list里面，每个元素是一个音频
-{text_list_from_audios}
+{audios}
 
 # 图像的内容，内容将放在Python的list里面，每个元素是一个图片
-{text_list_from_images}
+{images}
 
 # 文本的内容
 {text}

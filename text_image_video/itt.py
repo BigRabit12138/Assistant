@@ -4,6 +4,7 @@ import os.path
 import base64
 import websockets
 
+from io import BytesIO
 from PIL import Image
 from fastsam import FastSAM, FastSAMPrompt
 from lavis.models import load_model_and_preprocess
@@ -34,7 +35,7 @@ class ITT:
         return caption
 
     def captioning_image(self, image: bytes) -> list[str]:
-        raw_image = Image.open(image).convert('RGB')
+        raw_image = Image.open(BytesIO(image)).convert('RGB')
         image = self.vis_processor['eval'](raw_image).unsqueeze(0).to(self.device)
         caption = self.captioning_model.generate({'image': image})
         return caption
@@ -50,42 +51,9 @@ class ITT:
 
 async def itt_client(itt):
     global IS_INITIALIZED
-    if global_var.run_local_mode:
-        with socket_no_proxy():
-            async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
-                                          max_size=10 * 1024 * 1024) as websocket:
-                while True:
-                    if not IS_INITIALIZED:
-                        message = {
-                            'from': 'ITT',
-                            'to': 'SERVER',
-                            'content': 'hello'
-                        }
 
-                        message = json.dumps(message)
-                        await websocket.send(message)
-
-                        response = await websocket.recv()
-                        response = json.loads(response)
-
-                        if response['content'] == 'ok':
-                            IS_INITIALIZED = True
-                    else:
-                        recv = await websocket.recv()
-                        recv = json.loads(recv)
-
-                        image_bytes_base64_decoded = base64.b64decode(recv['content'].encode())
-                        text_list = itt.captioning_image(image_bytes_base64_decoded)
-
-                        message = {
-                            'from': 'ITI',
-                            'to': 'CLIENT',
-                            'content': text_list
-                        }
-
-                        message = json.dumps(message)
-                        await websocket.send(message)
-    else:
+    async def send_and_recv():
+        global IS_INITIALIZED
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
             while True:
@@ -109,13 +77,18 @@ async def itt_client(itt):
                     recv = json.loads(recv)
 
                     image_bytes_base64_decoded = base64.b64decode(recv['content'].encode())
-                    text_list = itt.captioning_image(image_bytes_base64_decoded)
+                    text_list = itt.captioning_image(BytesIO(image_bytes_base64_decoded))
 
                     message = {
-                        'from': 'ITI',
-                        'to': 'CLIENT',
+                        'from': 'ITT',
+                        'to': 'CLIENT.ITT',
                         'content': text_list
                     }
 
                     message = json.dumps(message)
                     await websocket.send(message)
+    if global_var.run_local_mode:
+        with socket_no_proxy():
+            await send_and_recv()
+    else:
+        await send_and_recv()

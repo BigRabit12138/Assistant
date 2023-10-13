@@ -38,10 +38,10 @@ async def main():
         if submit:
             print('GG哈哈哈')
             chat = ChatBotChain(prompt=PromptTemplate.from_template(CHATBOT_PROMPT), llm=HuggingChatForLangchain())
-            await chat.arun({'text': text, 'audios_list': audios_list, 'images_list': images_list,
-                             'text_list_from_audios': '', 'text_list_from_images': ''},
-                            callbacks=[StdOutCallbackHandler()])
-
+            aa = await chat.arun({'text': text, 'audios': audios_list, 'images': images_list},
+                                 callbacks=[StdOutCallbackHandler()])
+            print(aa)
+            
     with col2:
         st.title('输出')
         st.header('输出')
