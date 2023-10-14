@@ -67,7 +67,7 @@ class ChatBotChain(Chain):
         run_manager: Optional[AsyncCallbackManagerForChainRun] = None,
     ) -> Dict[str, Any]:
 
-        images, audios = await asyncio.gather(
+        audios, images = await asyncio.gather(
             audios_to_text(inputs['audios']),
             images_to_text(inputs['images'])
         )
