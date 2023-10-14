@@ -109,7 +109,6 @@ async def audios_to_text(audio_list: list):
                 recv = await websocket.recv()
                 recv = json.loads(recv)
                 if recv.get('status') == 404:
-                    print(recv)
                     global_var.logger.error(f'服务器后端出错：\n{recv}')
 
                     raise ServerException()
@@ -146,7 +145,6 @@ async def images_to_text(images_list: list):
                 recv = await websocket.recv()
                 recv = json.loads(recv)
                 if recv.get('status') == 404:
-                    print(recv)
                     global_var.logger.error(f'服务器后端出错：\n{recv}')
 
                     raise ServerException()
@@ -180,7 +178,6 @@ async def text_to_audio(text: str):
             recv = await websocket.recv()
             recv = json.loads(recv)
             if recv.get('status') == 404:
-                print(recv)
                 global_var.logger.error(f'服务器后端出错：\n{recv}')
 
                 raise ServerException()
@@ -214,7 +211,6 @@ async def text_to_image(text: str):
             recv = await websocket.recv()
             recv = json.loads(recv)
             if recv.get('status') == 404:
-                print(recv)
                 global_var.logger.error(f'服务器后端出错：\n{recv}')
 
                 raise ServerException()
@@ -248,7 +244,6 @@ async def text_to_video(text: str):
             recv = await websocket.recv()
             recv = json.loads(recv)
             if recv.get('status') == 404:
-                print(recv)
                 global_var.logger.error(f'服务器后端出错：\n{recv}')
 
                 raise ServerException()
@@ -286,7 +281,6 @@ async def image_to_image(prompt: str, image: bytes):
             recv = await websocket.recv()
             recv = json.loads(recv)
             if recv.get('status') == 404:
-                print(recv)
                 global_var.logger.error(f'服务器后端出错：\n{recv}')
 
                 raise ServerException()

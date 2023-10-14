@@ -56,6 +56,7 @@ async def itt_client(itt):
         global IS_INITIALIZED
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
+            global_var.logger.info("ITT启动")
             while True:
                 if not IS_INITIALIZED:
                     message = {
@@ -68,16 +69,20 @@ async def itt_client(itt):
                     await websocket.send(message)
 
                     response = await websocket.recv()
+                    global_var.logger.info(response)
+
                     response = json.loads(response)
 
                     if response['content'] == 'ok':
                         IS_INITIALIZED = True
                 else:
                     recv = await websocket.recv()
+                    global_var.logger.info(recv)
+
                     recv = json.loads(recv)
 
                     image_bytes_base64_decoded = base64.b64decode(recv['content'].encode())
-                    text_list = itt.captioning_image(BytesIO(image_bytes_base64_decoded))
+                    text_list = itt.captioning_image(image_bytes_base64_decoded)
 
                     message = {
                         'from': 'ITT',
@@ -87,6 +92,7 @@ async def itt_client(itt):
 
                     message = json.dumps(message)
                     await websocket.send(message)
+
     if global_var.run_local_mode:
         with socket_no_proxy():
             await send_and_recv()

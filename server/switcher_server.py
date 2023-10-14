@@ -13,7 +13,6 @@ async def handler(websocket):
     message_json = {}
     try:
         async for message in websocket:
-            print(message[:200])
             global_var.logger.info(message[:200])
 
             message_json = json.loads(message)
@@ -30,8 +29,7 @@ async def handler(websocket):
                 assert connections[message_json['to']] is not None
                 await connections[message_json['to']].send(message)
     except ConnectionClosedError as e:
-        print(f"服务器与{message_json['to']}连接断开，详情查看日志：\n{e[-200:]}")
-        global_var.logger.error(f"服务器与{message_json['to']}连接断开:\n{e}")
+        global_var.logger.error(f"服务器与{message_json['to']}连接断开:\n{str(e)}")
         connection_close_error_resp = {
             'from': 'SERVER',
             'to': message_json['from'],

@@ -26,16 +26,14 @@ chat_chain = ChatBotChain(
 )
 audios_list = [open('../resource/audio.wav', 'rb')]
 images_list = [open('../resource/photo.png', 'rb')]
-gg = chat_chain.run({'audios_list': audios_list,
-                     'images_list': images_list,
-                     'text': '你看见的图片是啥子内容？',
-                     'text_list_from_audios': '',
-                     'text_list_from_images': ''},
+gg = chat_chain.run({'audios': audios_list,
+                     'images': images_list,
+                     'text': '你看见的图片是啥子内容？'},
                     callbacks=[StdOutCallbackHandler()])
-bb = asyncio.run(chat_chain.arun({'audios_list': audios_list,
-                                  'images_list': images_list,
-                                  'text': '你看见的图片是啥子内容？',
-                                  'text_list_from_audios': '',
-                                  'text_list_from_images': ''},
+print(gg)
+bb = asyncio.run(chat_chain.arun({'audios': audios_list,
+                                  'images': images_list,
+                                  'text': '你看见的图片是啥子内容？'},
                                  callbacks=[StdOutCallbackHandler()]))
+print(bb)
 pass
