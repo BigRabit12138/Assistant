@@ -11,7 +11,6 @@ global_var.default_socket = default_socket
 socks.set_default_proxy(socks.SOCKS5, **global_var.proxy_setting)
 socket.socket = socks.socksocket
 
-import asyncio
 
 from agents import ChatBotChain
 from llm import HuggingChatForLangchain
@@ -24,13 +23,7 @@ chat_chain = ChatBotChain(
     prompt=PromptTemplate.from_template(CHATBOT_PROMPT),
     llm=HuggingChatForLangchain()
 )
-audios_list = [open('./resource/audio.wav', 'rb')]
-images_list = [open('./resource/photo.png', 'rb')]
-bb = asyncio.run(chat_chain.arun({'audios': audios_list,
-                                  'images': images_list,
-                                  'text': '你看见的图片是啥子内容？'},
-                                 callbacks=[StdOutCallbackHandler()]))
-print(bb)
+
 audios_list = [open('./resource/audio.wav', 'rb')]
 images_list = [open('./resource/photo.png', 'rb')]
 gg = chat_chain.run({'audios': audios_list,
