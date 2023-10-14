@@ -43,6 +43,7 @@ async def tts_client(tts):
         global IS_INITIALIZED
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
+            global_var.logger.info("TTS启动")
             while True:
                 if not IS_INITIALIZED:
                     message = {
@@ -54,12 +55,16 @@ async def tts_client(tts):
                     await websocket.send(message)
 
                     response = await websocket.recv()
+                    global_var.logger.info(response)
+
                     response = json.loads(response)
 
                     if response['content'] == 'ok':
                         IS_INITIALIZED = True
                 else:
                     recv = await websocket.recv()
+                    global_var.logger.info(recv)
+
                     recv = json.loads(recv)
 
                     speech_value, sampling_rate = tts.transcribe(recv['content'])

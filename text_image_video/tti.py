@@ -57,6 +57,7 @@ async def tti_client(tti):
         global IS_INITIALIZED
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
+            global_var.logger.info("TTI启动")
             while True:
                 if not IS_INITIALIZED:
                     message = {
@@ -69,16 +70,19 @@ async def tti_client(tti):
                     await websocket.send(message)
 
                     response = await websocket.recv()
+                    global_var.logger.info(response)
+
                     response = json.loads(response)
 
                     if response['content'] == 'ok':
                         IS_INITIALIZED = True
                 else:
                     recv = await websocket.recv()
+                    global_var.logger.info(recv)
+
                     recv = json.loads(recv)
 
                     image = tti.text2image(recv['content'])
-
                     image = base64.b64encode(image).decode()
 
                     message = {

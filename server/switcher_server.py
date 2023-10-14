@@ -47,5 +47,5 @@ async def switcher_server():
                                 global_var.port,
                                 max_size=10 * 1024 * 1024,
                                 ping_timeout=60 * 3):
-        print('Server启动')
+        global_var.logger.info('Server启动')
         await asyncio.Future()

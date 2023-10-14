@@ -96,8 +96,9 @@ async def audios_to_text(audio_list: list):
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
             for audio in audio_list:
-                audio = audio.read()
-                encoded_audio = base64.b64encode(audio).decode()
+                audio_content = audio.read()
+                audio.close()
+                encoded_audio = base64.b64encode(audio_content).decode()
                 message = {
                     'from': 'CLIENT.STT',
                     'to': 'STT',
@@ -132,8 +133,9 @@ async def images_to_text(images_list: list):
         async with websockets.connect(f'ws://{global_var.ip}:{global_var.port}/',
                                       max_size=10 * 1024 * 1024) as websocket:
             for image in images_list:
-                image = image.read()
-                encoded_image = base64.b64encode(image).decode()
+                image_content = image.read()
+                image.close()
+                encoded_image = base64.b64encode(image_content).decode()
                 message = {
                     'from': 'CLIENT.ITT',
                     'to': 'ITT',
