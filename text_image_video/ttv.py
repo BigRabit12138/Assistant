@@ -69,7 +69,6 @@ async def ttv_client(ttv):
                     recv = json.loads(recv)
 
                     video_frame = ttv.text2video(recv['content'])
-
                     video_frame = base64.b64encode(video_frame).decode()
 
                     message = {

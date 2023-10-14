@@ -29,8 +29,8 @@ async def handler(websocket):
                 assert connections[message_json['to']] is not None
                 await connections[message_json['to']].send(message)
     except ConnectionClosedError as e:
-        global_var.logger.error(f"服务器与{message_json.get('to')}连接断开:\n{str(e)}")
         if message_json != {}:
+            global_var.logger.error(f"服务器与{message_json.get('to')}连接断开:\n{str(e)}")
             connection_close_error_resp = {
                 'from': 'SERVER',
                 'to': message_json['from'],
@@ -39,6 +39,8 @@ async def handler(websocket):
             }
             connection_close_error_resp = json.dumps(connection_close_error_resp)
             await connections[message_json['from']].send(connection_close_error_resp)
+        else:
+            global_var.logger.error(f"服务器与客户端连接断开:\n{str(e)}")
 
 
 async def switcher_server():

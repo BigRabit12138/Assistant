@@ -103,6 +103,7 @@ async def iti_client(iti):
 
                     message = json.dumps(message)
                     await websocket.send(message)
+
     if global_var.run_local_mode:
         with socket_no_proxy():
             await send_and_recv()
