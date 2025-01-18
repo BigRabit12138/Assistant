@@ -14,19 +14,19 @@ if global_var.run_local_mode:
 import asyncio
 import argparse
 
-from server import switcher_server
-from text_speech import STT
-from text_speech import stt_client
-from text_speech import TTS
-from text_speech import tts_client
-from text_image_video import ITT
-from text_image_video import itt_client
-from text_image_video import ITI
-from text_image_video import iti_client
-from text_image_video import TTI
-from text_image_video import tti_client
-from text_image_video import TTV
-from text_image_video import ttv_client
+from assistant.server import switcher_server
+from assistant.text_speech import STT
+from assistant.text_speech import stt_client
+from assistant.text_speech import TTS
+from assistant.text_speech import tts_client
+from assistant.text_image_video import ITT
+from assistant.text_image_video import itt_client
+from assistant.text_image_video import ITI
+from assistant.text_image_video import iti_client
+from assistant.text_image_video import TTI
+from assistant.text_image_video import tti_client
+from assistant.text_image_video import TTV
+from assistant.text_image_video import ttv_client
 
 
 async def main():

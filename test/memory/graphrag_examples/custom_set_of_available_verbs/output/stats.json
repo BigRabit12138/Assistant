@@ -1,0 +1,11 @@
+{
+    "total_runtime": 0.28432321548461914,
+    "num_documents": 2,
+    "input_load_time": 0,
+    "workflows": {
+        "Anonymous Workflow 0": {
+            "overall": 0.005001068115234375,
+            "0_str_append": 0.0048406124114990234
+        }
+    }
+}

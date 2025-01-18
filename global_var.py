@@ -22,6 +22,7 @@ tmp = project_dir / 'tmp'
 # data path
 data_path = project_dir / 'data'
 
+cookie_path = data_path / 'cookies_snapshot'
 # 目录设置结束
 ###############################################################
 
@@ -85,6 +86,7 @@ chunk_size = 512
 #########################################################################
 # huggingface 的chat api设置
 # huggingchat
+login_with_passwd = False
 email = 'wuzhenglingame@gmail.com'
 passwd = ''
 # huggingface 的chat api设置结束

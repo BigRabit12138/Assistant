@@ -1,0 +1,20 @@
+workflows:
+  - name: aggregate_workflow
+    steps:
+      - verb: "aggregate"
+        args:
+          groupby: "type"
+          column: "col_multiplied"
+          to: "aggregate_output"
+          operation: "sum"
+        input:
+          source: "workflow:derive_workflow"
+
+  - name: derive_workflow
+    steps:
+      - verb: "derive"
+        args:
+          column1: "col1"
+          column2: "col2"
+          to: "col_multiplied"
+          operator: "*"

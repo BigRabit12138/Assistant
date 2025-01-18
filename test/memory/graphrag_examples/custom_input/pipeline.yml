@@ -1,0 +1,17 @@
+reporting:
+  type: console
+
+storage:
+  type: memory
+
+cache:
+  type: memory
+
+workflows:
+
+  - steps:
+
+      - verb: fill
+        args:
+          to: filled_column
+          value: "Filled Value"

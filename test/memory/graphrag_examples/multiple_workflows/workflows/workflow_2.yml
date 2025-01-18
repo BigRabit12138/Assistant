@@ -1,0 +1,13 @@
+name: workflow_2
+steps:
+  - verb: fill
+    args:
+      to: "col_workflow_2"
+      value: 2
+    input:
+      source: "workflow:workflow_1"
+
+  - verb: fill
+    args:
+      to: "col_from_shared_file"
+      value: !include ./shared/shared_fill_value.txt

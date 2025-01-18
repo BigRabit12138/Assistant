@@ -1,0 +1,1 @@
+from assistant.utils.set_socket_no_proxy import socket_no_proxy

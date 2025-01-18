@@ -1,0 +1,7 @@
+from assistant.agents.prompts.actor_prompt import ACTOR_TEMPLATE
+from assistant.agents.prompts.director_prompts import INIT_TEMPLATE
+from assistant.agents.prompts.director_prompts import ADD_SCENE_TEMPLATE
+from assistant.agents.prompts.director_prompts import ADD_ACTOR_TEMPLATE
+from assistant.agents.prompts.director_prompts import WRITE_DOWN_TEMPLATE
+from assistant.agents.prompts.director_prompts import EVALUATE_PLOT_TEMPLATE
+from assistant.agents.prompts.chatbot_prompt import CHATBOT_PROMPT

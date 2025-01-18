@@ -12,8 +12,8 @@ socket.socket = socks.socksocket
 
 import asyncio
 
-from agents.multi_agents.roles import Director
-from agents.multi_agents.roles.director import DirectorContext
+from assistant.agents import Director
+from assistant.agents.multi_agents.roles.director import DirectorContext
 
 dc = DirectorContext()
 

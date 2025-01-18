@@ -1,4 +1,4 @@
-from agents.messages import SceneMessage
+from assistant.agents import SceneMessage
 
 msg1 = SceneMessage(**{'role': '李三',
                        'action': '张三拿起一米长的大刀。',

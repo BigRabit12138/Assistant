@@ -13,9 +13,9 @@ socket.socket = socks.socksocket
 
 import asyncio
 
-from agents.multi_agents.envs import Scene
-from agents.multi_agents.roles import Actor
-from agents.messages import SceneMessage
+from assistant.agents import Scene
+from assistant.agents import Actor
+from assistant.agents import SceneMessage
 
 actor1 = Actor(name='张三',
                gender='男',

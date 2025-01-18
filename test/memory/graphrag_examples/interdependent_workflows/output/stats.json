@@ -1,0 +1,15 @@
+{
+    "total_runtime": 0.5295193195343018,
+    "num_documents": 4,
+    "input_load_time": 0,
+    "workflows": {
+        "derive_workflow": {
+            "overall": 0.0021004676818847656,
+            "0_derive": 0.0019469261169433594
+        },
+        "aggregate_workflow": {
+            "overall": 0.00479888916015625,
+            "0_aggregate": 0.0046520233154296875
+        }
+    }
+}

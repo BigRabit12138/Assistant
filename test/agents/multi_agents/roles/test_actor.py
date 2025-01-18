@@ -13,11 +13,11 @@ socket.socket = socks.socksocket
 
 import asyncio
 
-from agents.multi_agents.envs import Scene
-from agents.multi_agents.roles import Actor
-from agents.messages import SceneMessage
-from agents.multi_agents.roles.actor import ActorContext
-from agents.multi_agents.roles.actor import ActorSetting
+from assistant.agents import Scene
+from assistant.agents import Actor
+from assistant.agents import SceneMessage
+from assistant.agents.multi_agents.roles.actor import ActorContext
+from assistant.agents.multi_agents.roles.actor import ActorSetting
 
 ac = ActorContext()
 as_ = ActorSetting()

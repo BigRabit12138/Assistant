@@ -1,0 +1,13 @@
+workflows:
+  - name: "entity_extraction"
+    config:
+      entity_extract:
+        strategy:
+          type: "graph_intelligence"
+          llm:
+            type: "openai_chat"
+
+            api_key: !ENV ${OPENAI_API_KEY:None}
+            model: !ENV ${OPENAI_MODEL:gpt-3.5-turbo}
+            max_tokens: !ENV ${OPENAI_MAX_TOKENS:2500}
+            temperature: !ENV ${OPENAI_TEMPERATURE:0}
